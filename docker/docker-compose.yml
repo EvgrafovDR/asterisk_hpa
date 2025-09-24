@@ -1,0 +1,17 @@
+services:
+  asterisk:
+    build:
+      context: ./
+    image: asterisk:20.9-alpine
+    container_name: asterisk
+    restart: unless-stopped
+    working_dir: /etc/asterisk/
+    ports:
+      - "8088:8088"
+      - "5060:5060/udp"
+      - "5060:5060/tcp"
+    healthcheck:
+      test: [ "CMD", "asterisk", "-rx", "core show channels" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5

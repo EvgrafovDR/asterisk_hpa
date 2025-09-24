@@ -1,0 +1,15 @@
+{{- if .Values.metrics.prometheusRule.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: "{{ .Release.Name }}-prometheus-rule"
+  namespace: "{{- .Values.metrics.prometheusRule.namespace }}"
+  labels:
+    app: {{ .Release.Name }}
+    release: prometheus
+spec:
+  groups:
+    - name:  "{{ .Release.Name }}-metrics"
+      rules:
+        {{- tpl (toYaml .Values.metrics.prometheusRule.rules) . | trim | nindent 8 }}
+{{- end }}

@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    component: {{ .Values.appComponent }}
+    app: {{ .Release.Name }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      component: {{ .Values.appComponent }}
+      app: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        component: {{ .Values.appComponent }}
+        app: {{ .Release.Name }}
+      annotations:
+        rollme: {{ randAlphaNum 5 | quote }}
+    spec:
+      {{- if .Values.nodeSelector }}
+      nodeSelector:
+        {{- range $label, $value := .Values.nodeSelector }}
+          {{ $label }}: {{ $value }}
+        {{- end }}
+      {{- end }}
+      hostname: {{ .Release.Name }}
+      containers:
+        - name: asterisk
+          image: "{{ .Values.asterisk.image }}:{{ .Values.asterisk.tag }}"
+          imagePullPolicy: Always
+          {{- if .Values.asterisk.resources.enabled }}
+          resources:
+            limits:
+              cpu: {{ .Values.asterisk.resources.limits.cpu }}
+              memory: {{ .Values.asterisk.resources.limits.memory }}
+            requests:
+              cpu: {{ .Values.asterisk.resources.requests.cpu }}
+              memory: {{ .Values.asterisk.resources.requests.memory }}
+          {{- end }}
+          ports:
+            - name: exporter-http
+              containerPort: {{ .Values.asterisk.http.port }}
+          volumeMounts:
+            - name: asterisk-config
+              mountPath: "/etc/asterisk/pjsip.conf"
+              subPath: "pjsip"
+            - name: asterisk-config
+              mountPath: "/etc/asterisk/http.conf"
+              subPath: "http"
+      volumes:
+        - name: asterisk-config
+          secret:
+            secretName: {{ .Release.Name }}-asterisk-secret

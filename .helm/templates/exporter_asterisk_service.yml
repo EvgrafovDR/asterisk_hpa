@@ -1,0 +1,35 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: "{{ .Release.Name }}-prometheus-{{ .Values.appComponent }}-asterisk-exporter"
+  annotations:
+    prometheus.io/scrape: "true"
+  labels:
+    app: "prometheus-{{ .Values.appComponent }}-asterisk-exporter"
+    jobLabel: "{{ .Values.appComponent }}-exporter"
+    release: prometheus
+spec:
+  selector:
+    component: "{{ .Values.appComponent }}"
+  ports:
+  - name: asterisk-exporter
+    port: {{ .Values.asterisk.http.port }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: "{{ .Release.Name }}-prometheus-{{ .Values.appComponent }}-asterisk-servicemonitor"
+  namespace: monitoring
+  labels:
+    app: "prometheus-{{ .Values.appComponent }}-asterisk-exporter"
+    release: prometheus
+spec:
+  namespaceSelector:
+    matchNames:
+      - multiadmin
+  selector:
+    matchLabels:
+      app: "prometheus-{{ .Values.appComponent }}-asterisk-exporter"
+  endpoints:
+  - port: asterisk-exporter
+    interval: 15s

@@ -1,0 +1,16 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ .Release.Name }}-sip-service
+  labels:
+    component: {{ .Values.appComponent }}-asterisk
+    app: {{ .Release.Name }}
+spec:
+  selector:
+    app: {{ .Release.Name }}
+    component: {{ .Values.appComponent }}-asterisk
+  ports:
+  - name: sip
+    protocol: UDP
+    port: {{ .Values.asterisk.sip.udp_port }}
+    targetPort: {{ .Values.asterisk.sip.udp_port }}
